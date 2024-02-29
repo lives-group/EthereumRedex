@@ -18,16 +18,22 @@
 |#
 
 (define-language ETH
-  [ETH ::= T
-       B
-       Y
-       Π
-       σ]
+  [σ ::= Y
+         Π]
+  
+  [T ::= x] ;; idk how to write it yet
+  [Y ::= x] ;;           ||
+  
+  [B ::= ((T_0 T_1 ...) ...)]
+  [Π ::= (Y_0 Y_1 ...)]
   [x ::= variable-not-otherwise-mentioned])
 
-(define-extended-language VState ETH
+#;(define-extended-language VState ETH
   [σ ::= Y
      Π])
 
-(define-extended-language B ETH
-  [B ::= ((T ...) ...) ])
+#;(define-extended-language B ETH
+  [B ::= ((T_0 T_1 ...) ...) ])
+
+#;(define-extended-language Π ETH
+  [Π ::= (Y_0 Y_1 ...)])
