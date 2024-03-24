@@ -84,23 +84,53 @@ def addmod(computation: ComputationAPI) -> None:
 
 
 (define-language ETH
-  [E ::= s
+  [E ::= b
+     (E ...)
+     (STOP  E)
      (ADD E E)
      (MUL E E)
      (SUB E E)
      (DIV E E)]
-  [s ::= (E ...)]
-  [b ::= 0 1])
- 
+  [b ::= number])
+
+(define-extended-language Reduct ETH
+  [H ::=
+     (ADD E H)
+     (ADD H E)
+     (MUL H E)
+     (MUL E H)
+     (DIV H E)
+     (DIV E H)
+     (SUB H E)
+     (SUB E H)])
+
+; Pag 261 Semantics Engineering With PLT Redex  -> Using in-hole to solve inside expressions
+
 (define red
   (reduction-relation
    ETH
-   #:domain s
+   ;#:domain s
+   
    ; Terminal ?
 
-   ;; ADD --> (ADD (1 0 0) (1 1)) --> (1 1 1) 
+   ;(--> ())
+   
 
-   (--> (ADD (b ...) ()) (b ...))
-   (--> (ADD () (b ...)) (b ...))
-   #;(--> (ADD ))
+   (--> (ADD b_1 b_2)
+        ,(+ (term b_1) (term b_2))
+        "ADD")
+
+   
+   (--> (SUB b_1 b_2)
+        ,(- (term b_1) (term b_2))
+        "SUB")
+
    ))
+
+
+(module+ test
+  (test-->> red (term (ADD 1 2)) 3)
+  (test-->> red (term (ADD (ADD 1 2) 2)) 5) 
+  (test-->> red (term (ADD -3 2)) 1)
+  )
+(module+ test (test-results))
