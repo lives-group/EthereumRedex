@@ -84,53 +84,52 @@ def addmod(computation: ComputationAPI) -> None:
 
 
 (define-language ETH
-  [E ::= b
-     (E ...)
-     (STOP  E)
-     (ADD E E)
-     (MUL E E)
-     (SUB E E)
-     (DIV E E)]
-  [b ::= number])
+  [E ::=
+     STOP
+     ADD 
+     MUL 
+     SUB 
+     DIV]
+  [b ::= number]
+  [stateLeo ::= ((E ...) (E_1 ...) (b ...))]
+  [state ::= ((b ...) (E ...) b)]) ;; (pilha de numeros) (listra de instrucoes) instrucao corrente que esta executando 
 
-(define-extended-language Reduct ETH
-  [H ::=
-     (ADD E H)
-     (ADD H E)
-     (MUL H E)
-     (MUL E H)
-     (DIV H E)
-     (DIV E H)
-     (SUB H E)
-     (SUB E H)])
 
-; Pag 261 Semantics Engineering With PLT Redex  -> Using in-hole to solve inside expressions
+(define blue
+  (reduction-relation
+   ETH
+   #:domain stateLeo
+
+   ; ADD
+   (--> ((E ...) (ADD E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... ADD) (E_1 ...) (,(+ (term b_1) (term b_2)) b_3  ...)))
+
+   ))
 
 (define red
   (reduction-relation
    ETH
-   ;#:domain s
-   
-   ; Terminal ?
+   #:domain state
 
-   ;(--> ())
-   
-
-   (--> (ADD b_1 b_2)
-        ,(+ (term b_1) (term b_2))
+   ; ADD ELTO
+   (--> ((b_1 b_2 b_3 ...) (E ...) b)
+        ((,(+ (term b_1) (term b_2)) b_3 ... ) (E ...) ,(+ (term b) 1))
+        (where ADD (fetch (E ...) b))
         "ADD")
-
    
-   (--> (SUB b_1 b_2)
-        ,(- (term b_1) (term b_2))
-        "SUB")
-
+   
    ))
 
 
-(module+ test
+(define-metafunction ETH
+  fetch : (E ...) number -> E
+  [(fetch (E_1 E_2 ...) 0) E_1]
+  [(fetch (E_1 E_2 ...) number) (fetch (E_2 ...) ,(- (term number) 1))])
+
+
+#;(module+ test
   (test-->> red (term (ADD 1 2)) 3)
   (test-->> red (term (ADD (ADD 1 2) 2)) 5) 
   (test-->> red (term (ADD -3 2)) 1)
   )
-(module+ test (test-results))
+#;(module+ test (test-results))
