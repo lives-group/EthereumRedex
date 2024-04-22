@@ -89,37 +89,61 @@ def addmod(computation: ComputationAPI) -> None:
      ADD 
      MUL 
      SUB 
-     DIV]
+     DIV
+     MOD
+     EXP]
   [b ::= number]
-  [stateLeo ::= ((E ...) (E_1 ...) (b ...))]
-  [state ::= ((b ...) (E ...) b)]) ;; (pilha de numeros) (listra de instrucoes) instrucao corrente que esta executando 
+  [state ::= ((E ...) (E_1 ...) (b ...))]
+  [stateElto ::= ((b ...) (E ...) b)]) ;; (pilha de numeros) (listra de instrucoes) instrucao corrente que esta executando 
 
-
-(define blue
-  (reduction-relation
-   ETH
-   #:domain stateLeo
-
-   ; ADD
-   (--> ((E ...) (ADD E_1 ...) (b_1 b_2 b_3 ...))
-        ((E ... ADD) (E_1 ...) (,(+ (term b_1) (term b_2)) b_3  ...)))
-
-   ))
 
 (define red
   (reduction-relation
    ETH
    #:domain state
 
-   ; ADD ELTO
-   (--> ((b_1 b_2 b_3 ...) (E ...) b)
-        ((,(+ (term b_1) (term b_2)) b_3 ... ) (E ...) ,(+ (term b) 1))
-        (where ADD (fetch (E ...) b))
-        "ADD")
+   ; ADD
+   (--> ((E ...) (ADD E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... ADD) (E_1 ...) (,(+ (term b_1) (term b_2)) b_3  ...)))
+
+   ; SUB
+   (--> ((E ...) (SUB E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SUB) (E_1 ...) (,(abs (- (term b_1) (term b_2))) b_3 ...))) ; 
+
+   ; MUL
+   (--> ((E ...) (MUL E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... MUL) (E_1 ...) (,(* (term b_1) (term b_2)) b_3 ...)))
+   
+   
+   ; DIV ZERO
+   (--> ((E ...) (DIV E_1 ...) (b_1 0 b_3 ...))
+        ((E ... DIV) (E_1 ...) (0  b_3 ...)))
+   
+   ; DIV
+   (--> ((E ...) (DIV E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... DIV) (E_1 ...) (,(floor (/ (term b_1) (term b_2))) b_3 ...)))
+
+    ; MOD ZERO
+   (--> ((E ...) (MOD E_1 ...) (b_1 0 b_3 ...))
+        ((E ... MOD) (E_1 ...) (0  b_3 ...)))
+   
+   ; MOD
+   (--> ((E ...) (MOD E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... MOD) (E_1 ...) (,(round (/ (term b_1) (term b_2))) b_3 ...)))
+   
+  
+   ; EXP
+   (--> ((E ...) (EXP E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... EXP) (E_1 ...) (,(expt (term b_1) (term b_2)) b_3 ...)))
+   
    
    
    ))
 
+
+(define-metafunction ETH
+  funcDIV : b_1 -> b_2
+  [(funcDIV b_1) ,(floor (term b_1))])
 
 (define-metafunction ETH
   fetch : (E ...) number -> E
@@ -127,9 +151,7 @@ def addmod(computation: ComputationAPI) -> None:
   [(fetch (E_1 E_2 ...) number) (fetch (E_2 ...) ,(- (term number) 1))])
 
 
-#;(module+ test
-  (test-->> red (term (ADD 1 2)) 3)
-  (test-->> red (term (ADD (ADD 1 2) 2)) 5) 
-  (test-->> red (term (ADD -3 2)) 1)
-  )
-#;(module+ test (test-results))
+
+
+(traces red (term ( () (DIV ADD EXP) (5 2 1 2))))
+  
