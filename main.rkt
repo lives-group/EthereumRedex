@@ -129,12 +129,21 @@
         ((E ... SMOD) (E_1 ...) (,(modulo (term b_1) (term b_2)) b_3 ...))
         "SMOD")
 
-   (--> ((E ...) (SMOD E_1 ...) (b_1 b_2 b_3 ...))
-        ((E ... SMOD) (E_1 ...) (,(modulo (term b_1) (term b_2)) b_3 ...))
+   (--> ((E ...) (BYTE E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... BYTE) (E_1 ...) (,(modulo (term b_1) (term b_2)) b_3 ...))
         "BYTE")
-   
-   
-   
+
+   (--> ((E ...) (SHL E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SHL) (E_1 ...) (,(bitwise-and  (arithmetic-shift (term b_1) (* -1 (term b_2))) UNIT_256_MAX ) b_3  ...)) 
+        "SHL")
+
+   (--> ((E ...) (SHR E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SHR) (E_1 ...) (,(arithmetic-shift (term b_1) (term b_2))  b_3  ...)) 
+        "SHR")   
+
+   (--> ((E ...) (SAR E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SAR) (E_1 ...) (,(arithmetic-shift (term b_1) (term b_2))  b_3  ...)) 
+        "SAR")
    
    ))
 
