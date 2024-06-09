@@ -3,6 +3,8 @@
 
 (require redex)
 (require "./constants.rkt")
+(provide (all-defined-out))
+
 
 (define-language ETH
   [E ::=
@@ -41,6 +43,10 @@
    ETH
    #:domain state
 
+   (--> ((E ...) (STOP E_1 ...) (b ...))
+        ((E ... STOP) (E_1 ...) (b ...)) 
+        "STOP")
+   
    (--> ((E ...) (ADD E_1 ...) (b_1 b_2 b_3 ...))
         ((E ... ADD) (E_1 ...) (,(bitwise-and  (+ (term b_1) (term b_2)) UNIT_256_MAX ) b_3  ...)) 
         "ADD")
@@ -80,7 +86,15 @@
    (--> ((E ...) (LT E_1 ...) (b_1 b_2 b_3 ...))
         ((E ... LT) (E_1 ...) ((funcBOOL ,(< (term b_1) (term b_2)))  b_3 ...))
         "LT")
-   
+
+   (--> ((E ...) (SLT E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SLT) (E_1 ...) ((funcBOOL ,(< (term b_1) (term b_2)))  b_3 ...))
+        "SLT")
+
+   (--> ((E ...) (SGT E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SGT) (E_1 ...) ((funcBOOL ,(> (term b_1) (term b_2)))  b_3 ...))
+        "SGT")
+    
    (--> ((E ...) (GT E_1 ...) (b_1 b_2 b_3 ...))
         ((E ... GT) (E_1 ...) ((funcBOOL ,(> (term b_1) (term b_2)))  b_3 ...))
         "GT")
@@ -89,8 +103,8 @@
         ((E ... EQ) (E_1 ...) ((funcBOOL ,(= (term b_1) (term b_2)))  b_3 ...))
         "EQ")   
    
-   (--> ((E ...) (ISZERO E_1 ...) (b_1 b_2 b_3 ...))
-        ((E ... ISZERO) (E_1 ...) ((funcBOOL ,(zero? (term b_1) (term b_2)))  b_3 ...))
+   (--> ((E ...) (ISZERO E_1 ...) (b_1 b_2  ...))
+        ((E ... ISZERO) (E_1 ...) ((funcBOOL ,(zero? (term b_1))) b_2 ...))
         "ISZERO")
    
    (--> ((E ...) (AND E_1 ...) (b_1 b_2 b_3 ...))
@@ -98,15 +112,15 @@
         "AND")
    
    (--> ((E ...) (OR E_1 ...) (b_1 b_2 b_3 ...))
-        ((E ... OR) (E_1 ...) ((funcBOOL ,(or (term b_1) (term b_2)))  b_3 ...))
+        ((E ... OR) (E_1 ...) (,(bitwise-ior (term b_1) (term b_2))  b_3 ...))
         "OR")
 
    (--> ((E ...) (XOR E_1 ...) (b_1 b_2 b_3 ...))
-        ((E ... XOR) (E_1 ...) (,(bitwise-xor (term b_1) (term b_))  b_3 ...))
+        ((E ... XOR) (E_1 ...) (,(bitwise-xor (term b_1) (term b_2))  b_3 ...))
         "XOR")
    
-   (--> ((E ...) (LT E_1 ...) (b_1 b_2 ...))
-        ((E ... LT) (E_1 ...) ((funcNOT b_1) b_2 ...))
+   (--> ((E ...) (NOT E_1 ...) (b_1 b_2 ...))
+        ((E ... NOT) (E_1 ...) ((funcNOT b_1) b_2 ...))
         "NOT")
    
    (--> ((E ...) (EXP E_1 ...) (b_1 b_2 b_3 ...))
@@ -130,20 +144,44 @@
         "SMOD")
 
    (--> ((E ...) (BYTE E_1 ...) (b_1 b_2 b_3 ...))
-        ((E ... BYTE) (E_1 ...) (,(modulo (term b_1) (term b_2)) b_3 ...))
-        "BYTE")
+        ((E ... BYTE) (E_1 ...) (0 b_3 ...))
+        (side-condition (>= (term b_1) 32))
+        "BYTE-BT-32")
 
+   (--> ((E ...) (BYTE E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... BYTE) (E_1 ...) (,(modulo (quotient (term b_2) (expt 256 (- 31 (term b_1))))) b_3 ...))
+        (side-condition (< (term b_1) 32)) 
+        "BYTE-ST-32")
+   
    (--> ((E ...) (SHL E_1 ...) (b_1 b_2 b_3 ...))
-        ((E ... SHL) (E_1 ...) (,(bitwise-and  (arithmetic-shift (term b_1) (* -1 (term b_2))) UNIT_256_MAX ) b_3  ...)) 
+        ((E ... SHL) (E_1 ...) (,(bitwise-and  (arithmetic-shift (term b_2) (* -1 (term b_2))) UNIT_256_MAX ) b_3  ...)) 
         "SHL")
 
    (--> ((E ...) (SHR E_1 ...) (b_1 b_2 b_3 ...))
-        ((E ... SHR) (E_1 ...) (,(arithmetic-shift (term b_1) (term b_2))  b_3  ...)) 
+        ((E ... SHR) (E_1 ...) (,(abs (arithmetic-shift (term b_1) (term b_2)))  b_3  ...)) 
         "SHR")   
 
    (--> ((E ...) (SAR E_1 ...) (b_1 b_2 b_3 ...))
         ((E ... SAR) (E_1 ...) (,(arithmetic-shift (term b_1) (term b_2))  b_3  ...)) 
         "SAR")
+   
+   (--> ((E ...) (SIGNEXTEND E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SIGNEXTEND) (E_1 ...) (b_2  b_3  ...)) 
+        "SIGNEXTEND-BT-31"
+        (side-condition (< 31 (term b_1))))
+   
+   (--> ((E ...) (SIGNEXTEND E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SIGNEXTEND) (E_1 ...) (,(bitwise-ior (term b_2) (- UNIT_256_CEILING (arithmetic-shift -1 (+ (* (term b_1) 8) 7)))) b_3  ...)) 
+        "SIGNEXTEND-SL-31"
+        (side-condition (and (<= (term b_1) 31)
+                             (bitwise-and (term b_2) (arithmetic-shift -1 (+ (* (term b_1) 8) 7))))))
+
+   (--> ((E ...) (SIGNEXTEND E_1 ...) (b_1 b_2 b_3 ...))
+        ((E ... SIGNEXTEND) (E_1 ...) (,(bitwise-and (term b_2) (- (arithmetic-shift -1 (+ (* (term b_1) 8) 7)) 1)) b_3  ...)) 
+        "SIGNEXTEND-SL-31-else"
+        (side-condition (and (<= (term b_1) 31)
+                             (not (bitwise-and (term b_2) (arithmetic-shift -1 (+ (* (term b_1) 8) 7)))))))
+   
    
    ))
 
