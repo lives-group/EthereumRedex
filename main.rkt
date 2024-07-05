@@ -36,7 +36,21 @@
      SAR
      ;-----
      ADDRESS
-     BALANCE]
+     BALANCE
+     CALLER
+     CALLVALUE
+     CALLVALUE
+     CALLDATALOAD
+     CALLDATASIZE
+     CALLDATACOPY
+     CODESIZE
+     CODECOPY
+     GASPRICE
+     EXTCODESIZE
+     EXTCODECOPY
+     RETURNDATASIZE
+     RETURNDATACOPY
+     EXTCODEHASH]
   [b ::= number]
   [bool ::= #f #t]
   [I ::= number
@@ -213,7 +227,29 @@
    
    (--> ((E ...) (BALANCE E_1 ...) I (b_1 b_2 ...))
         ((E ... BALANCE) (E_1 ...) I (0 b_2 ...))
-        "BALANCE")
+        "BALANCE-OTHERWISE"
+         (side-condition ((zero? (modulo (term b_1)
+                                             (expt 2 160))))))
+   
+   (--> ((E ...) (ORIGIN E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
+        ((E ... ORIGIN) (E_1 ...) I (Io b_1 b_2 ...))
+        "ORIGIN")
+
+   (--> ((E ...) (CALLER E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
+        ((E ... CALLER) (E_1 ...) I (Is b_1 b_2 ...))
+        "CALLER")
+
+   (--> ((E ...) (CALLVALUE E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
+        ((E ... CALLVALUE) (E_1 ...) I (Iv b_1 b_2 ...))
+        "CALLVALUE")
+
+   (--> ((E ...) (CALLDATALOAD E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
+        ((E ... CALLDATALOAD) (E_1 ...) I (Io b_1 b_2 ...))
+        "CALLDATALOAD")
+
+   
+
+
    
    ))
 
