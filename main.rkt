@@ -53,7 +53,8 @@
      EXTCODEHASH]
   [b ::= number]
   [bool ::= #f #t]
-  [I ::= number
+  [Id ::= (b ...)]
+  [I  ::= number
      Ia
      Io
      Ip
@@ -65,6 +66,7 @@
      Ie
      Iw
      (Ia Io Ip Id Is Iv Ib Ih Ie Iw)]
+  
   [state ::= ((E ...) (E_1 ...) I (b ...))])
 
 
@@ -244,12 +246,14 @@
         "CALLVALUE")
 
    (--> ((E ...) (CALLDATALOAD E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
-        ((E ... CALLDATALOAD) (E_1 ...) I (Io b_1 b_2 ...))
+        ((E ... CALLDATALOAD) (E_1 ...) (Ia Io Ip (calldataload_ Id (term b_1) 0) Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
         "CALLDATALOAD")
 
-   
+   (--> ((E ...) (CALLDATASIZE E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
+        ((E ... CALLDATASIZE) (E_1 ...) I (,(length (term Id)) b_1 b_2 ...))
+        "CALLDATASIZE")   
 
-
+ ;; TODO:: FAZER FUNCIONAR A CHAMADA DA FUNCAO
    
    ))
 
@@ -269,6 +273,11 @@
   fetch : (E ...) number -> E
   [(fetch (E_1 E_2 ...) 0) E_1]
   [(fetch (E_1 E_2 ...) number) (fetch (E_2 ...) ,(- (term number) 1))])
+
+(define-metafunction ETH
+  calldataload_ : Id b_1 b_2 -> (b ...)
+  [(calldataload_ (b ...) b_1 32) (b ...)]
+  [(calldataload_ (b ...) b_1 b_2) (calldataload_ (b ... ,(+ (term b_1) (term b_2))) b_1 ,(+ (term b_2) 1))])
 
 
 
