@@ -54,8 +54,9 @@
   [b ::= number]
   [bool ::= #f #t]
   [Id ::= (b ...)]
+  [Ia ::= numero com 160 bits]
   [I  ::= number
-     Ia
+     Ia ; sempre 160 bts (todo endereço)
      Io
      Ip
      Id
@@ -218,7 +219,7 @@
    ; ===========================
    
    (--> ((E ...) (ADDRESS E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b ...))
-        ((E ... ADDRESS) (E_1 ...) I (Ia b ...))
+        ((E ... ADDRESS) (E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (Ia b ...))
         "ADDRESS")
 
    (--> ((E ...) (BALANCE E_1 ...) I (b_1 b_2 ...))
@@ -253,7 +254,7 @@
         ((E ... CALLDATASIZE) (E_1 ...) I (,(length (term Id)) b_1 b_2 ...))
         "CALLDATASIZE")   
 
- ;; TODO:: FAZER FUNCIONAR A CHAMADA DA FUNCAO
+
    
    ))
 
