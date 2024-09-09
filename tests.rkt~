@@ -1,0 +1,11 @@
+#lang racket
+
+(require redex)
+(require "./main.rkt")
+
+
+
+;(traces red (term (() (ADD DIV SUB) () (5 2 1 2))))
+
+
+(traces red (term ( () (ADDRESS) (1) (5 2 1 2))))

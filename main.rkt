@@ -37,6 +37,7 @@
      ;-----
      ADDRESS
      BALANCE
+     ORIGIN
      CALLER
      CALLVALUE
      CALLVALUE
@@ -52,21 +53,20 @@
      RETURNDATACOPY
      EXTCODEHASH]
   [b ::= number]
+  [addressType ::= (side-condition (name n number) (< (integer-length (term n)) 160))]
   [bool ::= #f #t]
-  [Id ::= (b ...)]
-  [Ia ::= numero com 160 bits]
-  [I  ::= number
-     Ia ; sempre 160 bts (todo endereço)
-     Io
-     Ip
-     Id
-     Is
-     Iv
-     Ib
-     Ih
-     Ie
-     Iw
-     (Ia Io Ip Id Is Iv Ib Ih Ie Iw)]
+  [Ia Io Is::= addressType] 
+ ; [Io ::= addressType] ; Sender - acredito que tambem seja um endereço 
+  [Ip ::= number] ; Price of gas paid - Pag 8
+  [Id ::= number] ; the byte array that is the input data to this execution if the execution agent is a transaction, this would be the transaction data.
+  ;[Is ::= addressType] ;; Outro endereço
+  [Iv ::= integer] ; value in Wei
+  [Ib ::= number] ; Pensei em puxar o valor da lista dos ja executados
+  [Ih ::= number ] ; The block header of the present block.
+  [Ie ::= number] ; Olhar na lista dos ja executados e ver quantos calls or create(2) tem
+  [Iw ::= number ] ; permission
+  [I  ::= (I ...)
+      Ia Io Ip Id Is Iv Ib Ih Ie Iw]
   
   [state ::= ((E ...) (E_1 ...) I (b ...))])
 
@@ -218,24 +218,24 @@
 
    ; ===========================
    
-   (--> ((E ...) (ADDRESS E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b ...))
-        ((E ... ADDRESS) (E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (Ia b ...))
+   (--> ((E ...) (ADDRESS E_1 ...) (Ia I_2 ...) (b_1 ...))
+        ((E ... ADDRESS) (E_1 ...) (Ia I_2 ...) (Ia b_1 ...))
         "ADDRESS")
 
    (--> ((E ...) (BALANCE E_1 ...) I (b_1 b_2 ...))
         ((E ... BALANCE) (E_1 ...) I (,(modulo (term b_1) (expt 2 160)) b_2 ...))
         "BALANCE"
-        (side-condition ((not (zero? (modulo (term b_1)
-                                             (expt 2 160)))))))
+        (side-condition (not (zero? (modulo (term b_1)
+                                             (expt 2 160))))))
    
    (--> ((E ...) (BALANCE E_1 ...) I (b_1 b_2 ...))
         ((E ... BALANCE) (E_1 ...) I (0 b_2 ...))
         "BALANCE-OTHERWISE"
-         (side-condition ((zero? (modulo (term b_1)
-                                             (expt 2 160))))))
+         (side-condition (zero? (modulo (term b_1)
+                                             (expt 2 160)))))
    
-   (--> ((E ...) (ORIGIN E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
-        ((E ... ORIGIN) (E_1 ...) I (Io b_1 b_2 ...))
+   (--> ((E ...) (ORIGIN E_1 ...)  (Ia Io I ...) (b_1 ...))
+        ((E ...   ORIGIN) (E_1 ...) (Ia Io I ...) (Io b_1 ...))
         "ORIGIN")
 
    (--> ((E ...) (CALLER E_1 ...) (Ia Io Ip Id Is Iv Ib Ih Ie Iw) (b_1 b_2 ...))
@@ -282,6 +282,4 @@
 
 
 
-
-;(traces red (term (() (DIV ADD EXP) (5 2 1 2))))
 
